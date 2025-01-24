@@ -1,5 +1,6 @@
 let canvas = document.getElementById("drawingCanvas");
 let prediction = document.getElementById("predictButton")
+let clear = document.getElementById("clearButton")
 console.log("Hello")
 console.log(canvas)
 
@@ -59,7 +60,7 @@ class drawingCanvas{
         console.log(singleLine)
         for(let line = 0; line < singleLine.length -1; line++){
             let startPos = this.relative_position(singleLine[line])
-            let endPos = this.relative_positioPn(singleLine[line+1])
+            let endPos = this.relative_position(singleLine[line+1])
             this.mode.moveTo(startPos[0], startPos[1])
             this.mode.lineTo(endPos[0], endPos[1])
             this.mode.stroke()
@@ -68,11 +69,12 @@ class drawingCanvas{
 
     relative_position(ev) {
         let bb = this.canvas.getBoundingClientRect();
-        const scaleX =1 //this.canvas.width / bb.width;
-        const scaleY = 1//sthis.canvas.height / bb.height;
-        let xPos = ev.clientX;
-        let yPos = ev.clientY;
+        const scaleX = this.canvas.width / bb.width;
+        const scaleY = this.canvas.height / bb.height;
+        let xPos = ev[0]
+        let yPos = ev[1]
         let relPos = [(xPos - bb.left) * scaleX, (yPos - bb.top) * scaleY];
+        console.log(relPos)
         return relPos;
       }
 }
@@ -82,11 +84,35 @@ function sendData(){
         method: "POST",
         body: JSON.stringify(positions),
         headers: {"Content-type": "application/json; charset=UTF-8"},
-    }).then((response) => response.json());
+    }).then((response) => response.json()).then((data) => showResultAsHtml(data));
+}
+
+function clearCanvas(){
+    let clearCanvas = document.getElementById("drawingCanvas")
+    clearCanvas.getContext('2d').clearRect(0, 0, 280, 280)
+    positions = []
+}
+
+function showResultAsHtml(data){
+    console.log(data)
+    let div = document.getElementById("results");
+    let myHtml = ""
+    for (let i = 0; i<10; i++){
+        myHtml += `
+        <div class="d-flex align-items">
+        <p>${i}</p>
+        <span style="width: 200px; height: 20px; background-color: grey;">
+          <div style="width: ${Math.round(data[i])}%; height: 20px; background-color: white;"></div>
+        </span>
+        <p>${Math.round(data[i])}%</p>
+      </div>`
+    }
+    div.innerHTML = myHtml
 }
 
 let positions = [];
 prediction.addEventListener("click", sendData)
+clear.addEventListener("click", clearCanvas)
 let dm = new drawingCanvas(canvas);
 /*
 function print(message){
